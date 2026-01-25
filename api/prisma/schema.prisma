@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(uuid())
+  telegramId  String   @unique
+  username    String?
+  firstName   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  orders      Order[]
+}
+
+model Service {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  icon        String?
+  color       String?
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  plans       Plan[]
+  orderItems  OrderItem[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Plan {
+  id             String      @id @default(uuid())
+  serviceId      String
+  service        Service     @relation(fields: [serviceId], references: [id])
+  accountType    AccountType
+  durationLabel  String
+  durationMonths Int
+  price          Int
+  active         Boolean     @default(true)
+  sortOrder      Int         @default(0)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  orderItems     OrderItem[]
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  totalAmount Int
+  status      OrderStatus @default(PENDING)
+  adminNote   String?
+  assignedTo  String?
+  customerContact String?
+  customerNote    String?
+  adminMessage    String?
+  items       OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model OrderItem {
+  id            String      @id @default(uuid())
+  orderId       String
+  order         Order       @relation(fields: [orderId], references: [id])
+  serviceId     String
+  service       Service     @relation(fields: [serviceId], references: [id])
+  planId        String
+  plan          Plan        @relation(fields: [planId], references: [id])
+  serviceName   String
+  accountType   AccountType
+  durationLabel String
+  price         Int
+  quantity      Int         @default(1)
+}
+
+enum AccountType {
+  ready
+  own
+}
+
+enum OrderStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
