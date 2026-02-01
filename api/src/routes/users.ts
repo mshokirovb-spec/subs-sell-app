@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { PrismaClient, OrderStatus } from '@prisma/client';
+import { OrderStatus } from '@prisma/client';
 import { getRequestTelegramUser, requireTelegramAuth } from '../lib/telegramAuth';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 const calculateDaysSince = (date: Date) => {
     const diffMs = Date.now() - date.getTime();

@@ -74,7 +74,14 @@ export const openChatWithUserId = (telegramId: string) => {
         return;
     }
 
-    // tg://user?id= opens a user profile/chat in Telegram clients.
+    // Inside Telegram, prefer openTelegramLink with a t.me URL to switch from the WebView to Telegram UI.
+    if (tg.openTelegramLink) {
+        tg.openTelegramLink(`https://t.me/user?id=${encodeURIComponent(id)}`);
+        setTimeout(() => tg.close?.(), 200);
+        return;
+    }
+
+    // Fallback: try opening a deep-link via openLink.
     if (tg.openLink) {
         tg.openLink(`tg://user?id=${encodeURIComponent(id)}`);
         return;

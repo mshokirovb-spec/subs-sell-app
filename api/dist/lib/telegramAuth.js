@@ -103,8 +103,15 @@ exports.verifyTelegramInitData = verifyTelegramInitData;
 const requireTelegramAuth = (req, res, next) => {
     var _a;
     const botToken = getBotToken();
-    // Dev fallback: if no token is configured, skip verification.
+    // In production we never allow skipping Telegram verification.
     if (!botToken) {
+        if (process.env.NODE_ENV === 'production') {
+            return res.status(500).json({
+                success: false,
+                error: 'Telegram bot token is not configured',
+            });
+        }
+        // Dev fallback: if no token is configured, skip verification.
         return next();
     }
     const initData = String((_a = req.header('x-telegram-init-data')) !== null && _a !== void 0 ? _a : '').trim();
@@ -125,6 +132,9 @@ const getRequestTelegramUser = (req) => {
     var _a, _b, _c, _d, _e;
     if (req.telegramUser)
         return req.telegramUser;
+    // Never accept header/body identity in production.
+    if (process.env.NODE_ENV === 'production')
+        return null;
     // Dev fallback: allow explicit headers/body to behave like before.
     const telegramId = String((_c = (_a = req.header('x-telegram-id')) !== null && _a !== void 0 ? _a : (_b = req.body) === null || _b === void 0 ? void 0 : _b.telegramId) !== null && _c !== void 0 ? _c : '').trim();
     if (!telegramId)

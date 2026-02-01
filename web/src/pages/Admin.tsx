@@ -5,6 +5,7 @@ import { isAdminUser } from "../lib/admin";
 import type { Order } from "../lib/types";
 import { RefreshCw } from "lucide-react";
 import { openChatWithUserId, openChatWithUsername } from "../lib/telegramLinks";
+import { Skeleton } from "../components/Skeleton";
 
 const statusOptions: Array<{ value: Order["status"] | "ALL"; label: string }> = [
     { value: "PENDING", label: "Новые" },
@@ -129,7 +130,44 @@ export function Admin() {
             </div>
 
             {isLoading ? (
-                <div className="text-sm text-muted-foreground">Загрузка...</div>
+                <div className="space-y-4">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                        <div
+                            key={index}
+                            className="bg-card border border-border rounded-2xl p-4 space-y-4"
+                        >
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="space-y-2">
+                                    <Skeleton className="h-3 w-10" />
+                                    <Skeleton className="h-5 w-24" />
+                                    <Skeleton className="h-3 w-32" />
+                                </div>
+                                <Skeleton className="h-6 w-20 rounded-full" />
+                            </div>
+                            <div className="space-y-2">
+                                {Array.from({ length: 2 }).map((__, row) => (
+                                    <div
+                                        key={row}
+                                        className="flex items-center justify-between text-sm border border-border rounded-xl px-3 py-2"
+                                    >
+                                        <div className="space-y-2">
+                                            <Skeleton className="h-4 w-24" />
+                                            <Skeleton className="h-3 w-28" />
+                                        </div>
+                                        <div className="space-y-2 text-right">
+                                            <Skeleton className="h-4 w-16 ml-auto" />
+                                            <Skeleton className="h-3 w-10 ml-auto" />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                                <Skeleton className="h-3 w-12" />
+                                <Skeleton className="h-6 w-24" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
             ) : error ? (
                 <div className="text-sm text-destructive">{error}</div>
             ) : orders.length === 0 ? (
@@ -294,7 +332,7 @@ function OrderCard({
                         <div>
                             <div className="font-medium">{item.serviceName}</div>
                             <div className="text-xs text-muted-foreground">
-                                {item.accountType === "ready" ? "Готовый" : "На ваш"} · {item.durationLabel}
+                                {item.accountType === "ready" ? "Готовый" : "На мой"} · {item.durationLabel}
                             </div>
                         </div>
                         <div className="text-right">

@@ -10,12 +10,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../lib/prisma");
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
 router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const services = yield prisma.service.findMany({
+        const services = yield prisma_1.prisma.service.findMany({
             where: { active: true },
             include: {
                 plans: {

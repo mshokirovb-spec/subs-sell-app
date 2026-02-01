@@ -11,7 +11,32 @@ dotenv.config({ override: true });
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(cors());
+const corsOrigins = (process.env.CORS_ORIGIN ?? '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+const botToken = String(process.env.TELEGRAM_BOT_TOKEN ?? process.env.BOT_TOKEN ?? '').trim();
+
+if (process.env.NODE_ENV === 'production') {
+    if (!botToken) {
+        console.warn(
+            'TELEGRAM_BOT_TOKEN is not set; protected endpoints will respond with 500.'
+        );
+    }
+
+    if (corsOrigins.length === 0) {
+        console.warn(
+            'CORS_ORIGIN is not set; API will allow requests from any origin.'
+        );
+    }
+}
+
+app.use(
+    cors({
+        origin: corsOrigins.length > 0 ? corsOrigins : true,
+    })
+);
 app.use(express.json());
 
 app.use('/api/me', meRouter);

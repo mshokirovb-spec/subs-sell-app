@@ -1,9 +1,9 @@
 import { Router, type Request } from 'express';
 import { getRequestTelegramUser, isTelegramAuthConfigured, requireTelegramAuth } from '../lib/telegramAuth';
-import { PrismaClient, OrderStatus } from '@prisma/client';
+import { prisma } from '../lib/prisma';
+import { OrderStatus } from '@prisma/client';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 const adminIds = new Set(
     (process.env.ADMIN_TELEGRAM_IDS ?? '')

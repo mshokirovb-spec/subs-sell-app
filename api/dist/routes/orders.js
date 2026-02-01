@@ -12,9 +12,9 @@ var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const telegramAuth_1 = require("../lib/telegramAuth");
+const prisma_1 = require("../lib/prisma");
 const client_1 = require("@prisma/client");
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
 const adminIds = new Set(((_a = process.env.ADMIN_TELEGRAM_IDS) !== null && _a !== void 0 ? _a : '')
     .split(',')
     .map((value) => value.trim())
@@ -56,7 +56,7 @@ router.post('/', telegramAuth_1.requireTelegramAuth, (req, res) => __awaiter(voi
             normalizedItems.set(planId, ((_d = normalizedItems.get(planId)) !== null && _d !== void 0 ? _d : 0) + quantity);
         }
         const planIds = Array.from(normalizedItems.keys());
-        const plans = yield prisma.plan.findMany({
+        const plans = yield prisma_1.prisma.plan.findMany({
             where: { id: { in: planIds }, active: true },
             include: { service: true },
         });
@@ -81,11 +81,11 @@ router.post('/', telegramAuth_1.requireTelegramAuth, (req, res) => __awaiter(voi
             };
         });
         const totalAmount = itemsData.reduce((sum, item) => sum + item.price * item.quantity, 0);
-        let user = yield prisma.user.findUnique({
+        let user = yield prisma_1.prisma.user.findUnique({
             where: { telegramId: telegramUser.id },
         });
         if (!user) {
-            user = yield prisma.user.create({
+            user = yield prisma_1.prisma.user.create({
                 data: {
                     telegramId: telegramUser.id,
                     username: telegramUser.username,
@@ -94,12 +94,12 @@ router.post('/', telegramAuth_1.requireTelegramAuth, (req, res) => __awaiter(voi
             });
         }
         else if ((telegramUser.username && user.username !== telegramUser.username) || (telegramUser.firstName && user.firstName !== telegramUser.firstName)) {
-            user = yield prisma.user.update({
+            user = yield prisma_1.prisma.user.update({
                 where: { id: user.id },
                 data: Object.assign(Object.assign({}, (telegramUser.username ? { username: telegramUser.username } : {})), (telegramUser.firstName ? { firstName: telegramUser.firstName } : {})),
             });
         }
-        const order = yield prisma.order.create({
+        const order = yield prisma_1.prisma.order.create({
             data: {
                 userId: user.id,
                 totalAmount,
@@ -144,7 +144,7 @@ router.get('/', telegramAuth_1.requireTelegramAuth, (req, res) => __awaiter(void
         : 50;
     const skip = Number.isFinite(offsetRaw) ? Math.max(offsetRaw, 0) : 0;
     try {
-        const orders = yield prisma.order.findMany({
+        const orders = yield prisma_1.prisma.order.findMany({
             where: {
                 status,
                 assignedTo: unassigned ? null : assignedTo,
@@ -179,7 +179,7 @@ router.post('/:id/claim', telegramAuth_1.requireTelegramAuth, (req, res) => __aw
         return res.status(400).json({ success: false, error: 'Missing admin telegram id' });
     }
     try {
-        const result = yield prisma.order.updateMany({
+        const result = yield prisma_1.prisma.order.updateMany({
             where: {
                 id: req.params.id,
                 status: client_1.OrderStatus.PENDING,
@@ -195,7 +195,7 @@ router.post('/:id/claim', telegramAuth_1.requireTelegramAuth, (req, res) => __aw
                 .status(409)
                 .json({ success: false, error: 'Order is already claimed' });
         }
-        const order = yield prisma.order.findUnique({
+        const order = yield prisma_1.prisma.order.findUnique({
             where: { id: req.params.id },
             include: {
                 user: true,
@@ -219,7 +219,7 @@ router.get('/:id', telegramAuth_1.requireTelegramAuth, (req, res) => __awaiter(v
         return res.status(403).json({ success: false, error: 'Forbidden' });
     }
     try {
-        const order = yield prisma.order.findUnique({
+        const order = yield prisma_1.prisma.order.findUnique({
             where: { id: req.params.id },
             include: {
                 user: true,
@@ -271,7 +271,7 @@ router.patch('/:id', telegramAuth_1.requireTelegramAuth, (req, res) => __awaiter
         return res.status(400).json({ success: false, error: 'No updates provided' });
     }
     try {
-        const order = yield prisma.order.update({
+        const order = yield prisma_1.prisma.order.update({
             where: { id: req.params.id },
             data,
             include: {

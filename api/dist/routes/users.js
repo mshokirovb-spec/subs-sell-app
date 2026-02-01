@@ -12,8 +12,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const client_1 = require("@prisma/client");
 const telegramAuth_1 = require("../lib/telegramAuth");
+const prisma_1 = require("../lib/prisma");
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
 const calculateDaysSince = (date) => {
     const diffMs = Date.now() - date.getTime();
     if (diffMs <= 0)
@@ -35,12 +35,12 @@ router.get('/:telegramId/profile', telegramAuth_1.requireTelegramAuth, (req, res
     const limitRaw = Number((_b = req.query.limit) !== null && _b !== void 0 ? _b : 10);
     const take = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 50) : 10;
     try {
-        let user = yield prisma.user.findUnique({
+        let user = yield prisma_1.prisma.user.findUnique({
             where: { telegramId },
         });
         if (!user && requestUser) {
             // Create the user on first launch (when Telegram auth is present).
-            user = yield prisma.user.create({
+            user = yield prisma_1.prisma.user.create({
                 data: {
                     telegramId: requestUser.id,
                     username: requestUser.username,
@@ -63,7 +63,7 @@ router.get('/:telegramId/profile', telegramAuth_1.requireTelegramAuth, (req, res
                 orders: [],
             });
         }
-        const orders = yield prisma.order.findMany({
+        const orders = yield prisma_1.prisma.order.findMany({
             where: {
                 userId: user.id,
             },
@@ -73,10 +73,10 @@ router.get('/:telegramId/profile', telegramAuth_1.requireTelegramAuth, (req, res
             orderBy: { createdAt: 'desc' },
             take,
         });
-        const ordersCount = yield prisma.order.count({
+        const ordersCount = yield prisma_1.prisma.order.count({
             where: { userId: user.id },
         });
-        const totalSpentResult = yield prisma.order.aggregate({
+        const totalSpentResult = yield prisma_1.prisma.order.aggregate({
             where: {
                 userId: user.id,
                 status: { not: client_1.OrderStatus.CANCELLED },

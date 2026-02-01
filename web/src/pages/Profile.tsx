@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { User, Package, Clock, Settings, Headphones, History, ChevronRight } from "lucide-react";
 import { getTelegramUser } from "../lib/telegram";
 import { api } from "../lib/api";
+import { Skeleton } from "../components/Skeleton";
 import type { ProfileOrder, ProfileStats } from "../lib/types";
 import { openSupportBotForOrder } from "../lib/supportBot";
 
@@ -100,23 +101,38 @@ export function Profile() {
                 <div className="text-sm text-destructive mb-6">{error}</div>
             ) : null}
 
-            <div className="grid grid-cols-3 gap-3 mb-8">
-                <div className="bg-card border border-border rounded-xl p-3 flex flex-col items-center justify-center text-center">
-                    <Package className="w-6 h-6 text-primary mb-2" />
-                    <span className="text-lg font-bold">{stats.ordersCount}</span>
-                    <span className="text-xs text-muted-foreground">Заказов</span>
+            {isLoading ? (
+                <div className="grid grid-cols-3 gap-3 mb-8">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                        <div
+                            key={index}
+                            className="bg-card border border-border rounded-xl p-3 flex flex-col items-center justify-center text-center"
+                        >
+                            <Skeleton className="w-6 h-6 rounded-full mb-2" />
+                            <Skeleton className="h-5 w-10 mb-2" />
+                            <Skeleton className="h-3 w-14" />
+                        </div>
+                    ))}
                 </div>
-                <div className="bg-card border border-border rounded-xl p-3 flex flex-col items-center justify-center text-center">
-                    <span className="text-xl font-bold text-primary mb-1">₽</span>
-                    <span className="text-lg font-bold">{stats.totalSpent.toLocaleString()}</span>
-                    <span className="text-xs text-muted-foreground">Потрачено</span>
+            ) : (
+                <div className="grid grid-cols-3 gap-3 mb-8">
+                    <div className="bg-card border border-border rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                        <Package className="w-6 h-6 text-primary mb-2" />
+                        <span className="text-lg font-bold">{stats.ordersCount}</span>
+                        <span className="text-xs text-muted-foreground">Заказов</span>
+                    </div>
+                    <div className="bg-card border border-border rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                        <span className="text-xl font-bold text-primary mb-1">₽</span>
+                        <span className="text-lg font-bold">{stats.totalSpent.toLocaleString()}</span>
+                        <span className="text-xs text-muted-foreground">Потрачено</span>
+                    </div>
+                    <div className="bg-card border border-border rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                        <Clock className="w-6 h-6 text-primary mb-2" />
+                        <span className="text-lg font-bold">{stats.daysWithUs}</span>
+                        <span className="text-xs text-muted-foreground">Дней с нами</span>
+                    </div>
                 </div>
-                <div className="bg-card border border-border rounded-xl p-3 flex flex-col items-center justify-center text-center">
-                    <Clock className="w-6 h-6 text-primary mb-2" />
-                    <span className="text-lg font-bold">{stats.daysWithUs}</span>
-                    <span className="text-xs text-muted-foreground">Дней с нами</span>
-                </div>
-            </div>
+            )}
 
             <div className="space-y-2 mb-8">
                 {menuItems.map((item, index) => (
@@ -142,7 +158,46 @@ export function Profile() {
                     ) : null}
                 </div>
 
-                {!isLoading && orders.length === 0 ? (
+                {isLoading ? (
+                    <div className="space-y-3">
+                        {Array.from({ length: 2 }).map((_, index) => (
+                            <div
+                                key={index}
+                                className="bg-card border border-border rounded-2xl p-4 space-y-3"
+                            >
+                                <div className="flex items-start justify-between">
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-3 w-12" />
+                                        <Skeleton className="h-5 w-24" />
+                                        <Skeleton className="h-3 w-32" />
+                                    </div>
+                                    <Skeleton className="h-6 w-20 rounded-full" />
+                                </div>
+                                <div className="space-y-2">
+                                    {Array.from({ length: 2 }).map((__, row) => (
+                                        <div
+                                            key={row}
+                                            className="flex items-center justify-between text-sm border border-border rounded-xl px-3 py-2"
+                                        >
+                                            <div className="space-y-2">
+                                                <Skeleton className="h-4 w-24" />
+                                                <Skeleton className="h-3 w-28" />
+                                            </div>
+                                            <div className="space-y-2 text-right">
+                                                <Skeleton className="h-4 w-16 ml-auto" />
+                                                <Skeleton className="h-3 w-10 ml-auto" />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="flex items-center justify-between text-sm">
+                                    <Skeleton className="h-3 w-12" />
+                                    <Skeleton className="h-6 w-24" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : orders.length === 0 ? (
                     <div className="text-sm text-muted-foreground">Пока нет заказов.</div>
                 ) : (
                     <div className="space-y-3">
@@ -172,7 +227,7 @@ export function Profile() {
                                             <div>
                                                 <div className="font-medium">{item.serviceName}</div>
                                                 <div className="text-xs text-muted-foreground">
-                                                    {item.accountType === "ready" ? "Готовый" : "На ваш"} · {item.durationLabel}
+                                                    {item.accountType === "ready" ? "Готовый" : "На мой"} · {item.durationLabel}
                                                 </div>
                                             </div>
                                             <div className="text-right">

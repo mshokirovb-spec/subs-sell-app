@@ -10,10 +10,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
 const telegramAuth_1 = require("../lib/telegramAuth");
+const prisma_1 = require("../lib/prisma");
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
 // Ensures there is a User row for the current Telegram user.
 // In production this relies on verified initData; in dev it falls back to provided IDs.
 router.post('/ensure', telegramAuth_1.requireTelegramAuth, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -24,7 +23,7 @@ router.post('/ensure', telegramAuth_1.requireTelegramAuth, (req, res) => __await
             .json({ success: false, error: 'Missing telegram user' });
     }
     try {
-        const user = yield prisma.user.upsert({
+        const user = yield prisma_1.prisma.user.upsert({
             where: { telegramId: telegramUser.id },
             update: Object.assign(Object.assign({}, (telegramUser.username ? { username: telegramUser.username } : {})), (telegramUser.firstName ? { firstName: telegramUser.firstName } : {})),
             create: {

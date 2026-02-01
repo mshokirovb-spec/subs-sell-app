@@ -6,6 +6,8 @@ import { api } from "../lib/api";
 import { getTelegramUser } from "../lib/telegram";
 import { openSupportChat } from "../lib/support";
 import { CheckoutSheet, type CheckoutDetails } from "../components/CheckoutSheet";
+import { ServiceIcon } from "../components/ServiceIcon";
+import { resolveServiceIcon } from "../lib/serviceIcons";
 
 export function Cart() {
     const { cartItems, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
@@ -70,16 +72,23 @@ export function Cart() {
                                 className="bg-card border border-border rounded-xl p-4 flex items-center gap-4 shadow-sm"
                             >
                                 <div
-                                    className="w-12 h-12 rounded-full flex items-center justify-center text-2xl text-white shrink-0"
+                                    className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden text-2xl text-white shrink-0"
                                     style={{ backgroundColor: item.serviceColor }}
                                 >
-                                    {item.serviceIcon}
+                                    <ServiceIcon
+                                        icon={resolveServiceIcon(
+                                            { name: item.serviceName, icon: item.serviceIcon },
+                                            item.serviceIcon
+                                        )}
+                                        alt={item.serviceName}
+                                        fallback={item.serviceIcon}
+                                    />
                                 </div>
 
                                 <div className="flex-1 min-w-0">
                                     <h3 className="font-semibold truncate">{item.serviceName}</h3>
                                     <p className="text-xs text-muted-foreground">
-                                        {item.accountType === "ready" ? "Готовый аккаунт" : "На ваш аккаунт"} • {item.durationLabel}
+                                        {item.accountType === "ready" ? "Готовый аккаунт" : "На мой аккаунт"} • {item.durationLabel}
                                     </p>
                                     <div className="flex items-center gap-3 mt-2">
                                         <div className="flex items-center bg-accent rounded-lg">

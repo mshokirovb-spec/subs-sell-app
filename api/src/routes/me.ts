@@ -1,9 +1,8 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { getRequestTelegramUser, requireTelegramAuth } from '../lib/telegramAuth';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Ensures there is a User row for the current Telegram user.
 // In production this relies on verified initData; in dev it falls back to provided IDs.

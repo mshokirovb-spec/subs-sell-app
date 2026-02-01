@@ -1,21 +1,38 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Check, ShoppingCart, Plus, Minus } from "lucide-react";
+import {ChevronLeft, Check, ShoppingCart, Plus, Minus, Lock } from "lucide-react";
 import { useCart } from "../context/CartContext";
+import { ServiceIcon } from "../components/ServiceIcon";
+import { Skeleton } from "../components/Skeleton";
 import { api } from "../lib/api";
 import type { AccountType, Plan, Service } from "../lib/types";
+import { looksLikeImageUrl, resolveServiceIcon } from "../lib/serviceIcons";
 
 const fallbackIcon = "📦";
+
+const COMING_SOON_SERVICE_NAMES = new Set([
+    "Spotify",
+    "Netflix",
+    "Discord",
+    "YouTube",
+    "PS Plus",
+]);
 
 export function Catalog() {
     const { addToCart } = useCart();
     const [services, setServices] = useState<Service[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [comingSoonService, setComingSoonService] = useState<Service | null>(null);
     const [selectedService, setSelectedService] = useState<Service | null>(null);
     const [accountType, setAccountType] = useState<AccountType | null>(null);
     const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
     const [quantity, setQuantity] = useState(1);
+
+    const selectedServiceIcon = selectedService
+        ? resolveServiceIcon(selectedService, fallbackIcon)
+        : fallbackIcon;
+    const selectedServiceIsImageIcon = looksLikeImageUrl(selectedServiceIcon);
 
     useEffect(() => {
         let isMounted = true;
@@ -54,6 +71,11 @@ export function Catalog() {
     }, [selectedService, accountType]);
 
     const handleServiceClick = (service: Service) => {
+        if (COMING_SOON_SERVICE_NAMES.has(service.name)) {
+            setComingSoonService(service);
+            return;
+        }
+
         setSelectedService(service);
         setAccountType(null);
         setSelectedPlan(null);
@@ -113,14 +135,28 @@ export function Catalog() {
                     >
                         <h1 className="text-2xl font-bold mb-6">Каталог</h1>
                         {isLoading ? (
-                            <div className="text-sm text-muted-foreground">Загрузка...</div>
+                            <div className="grid grid-cols-2 gap-3">
+                                {Array.from({ length: 6 }).map((_, index) => (
+                                    <div
+                                        key={index}
+                                        className="bg-card border border-border rounded-2xl p-4 flex flex-col items-center justify-center gap-3"
+                                    >
+                                        <Skeleton className="w-12 h-12 rounded-xl" />
+                                        <Skeleton className="h-4 w-20" />
+                                    </div>
+                                ))}
+                            </div>
                         ) : error ? (
                             <div className="text-sm text-destructive">{error}</div>
                         ) : services.length === 0 ? (
                             <div className="text-sm text-muted-foreground">Каталог пуст</div>
                         ) : (
                             <div className="grid grid-cols-2 gap-3">
-                                {services.map((service) => (
+                                {services.map((service) => {
+                                    const icon = resolveServiceIcon(service, fallbackIcon);
+                                    const isImageIcon = looksLikeImageUrl(icon);
+
+                                    return (
                                     <motion.div
                                         key={service.id}
                                         whileTap={{ scale: 0.95 }}
@@ -128,16 +164,30 @@ export function Catalog() {
                                         className="aspect-square rounded-xl bg-card border border-border flex flex-col items-center justify-center p-4 shadow-sm active:shadow-inner transition-all cursor-pointer"
                                     >
                                         <div
-                                            className="w-12 h-12 rounded-full flex items-center justify-center text-2xl mb-3 text-white shadow-md"
-                                            style={{ backgroundColor: service.color ?? "#334155" }}
+                                            className={`w-12 h-12 flex items-center justify-center overflow-hidden mb-3 ${
+                                                isImageIcon
+                                                    ? "rounded-xl bg-card border border-border/50"
+                                                    : "rounded-full text-2xl text-white shadow-md"
+                                            }`}
+                                            style={
+                                                isImageIcon
+                                                    ? undefined
+                                                    : { backgroundColor: service.color ?? "#334155" }
+                                            }
                                         >
-                                            {service.icon ?? fallbackIcon}
+                                            <ServiceIcon
+                                                icon={icon}
+                                                alt={service.name}
+                                                fallback={service.icon ?? fallbackIcon}
+                                                className={isImageIcon ? "w-full h-full object-cover block" : undefined}
+                                            />
                                         </div>
                                         <span className="font-semibold text-sm text-center leading-tight">
                                             {service.name}
                                         </span>
                                     </motion.div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </motion.div>
@@ -161,10 +211,25 @@ export function Catalog() {
 
                         <div className="flex justify-center mb-6">
                             <div
-                                className="w-16 h-16 rounded-full flex items-center justify-center text-3xl text-white shadow-lg"
-                                style={{ backgroundColor: selectedService.color ?? "#334155" }}
+                                className={`w-16 h-16 flex items-center justify-center overflow-hidden shadow-lg ${
+                                    selectedServiceIsImageIcon
+                                        ? "rounded-2xl bg-card border border-border/50"
+                                        : "rounded-full text-3xl text-white"
+                                }`}
+                                style={
+                                    selectedServiceIsImageIcon
+                                        ? undefined
+                                        : { backgroundColor: selectedService.color ?? "#334155" }
+                                }
                             >
-                                {selectedService.icon ?? fallbackIcon}
+                                <ServiceIcon
+                                    icon={selectedServiceIcon}
+                                    alt={selectedService.name}
+                                    fallback={selectedService.icon ?? fallbackIcon}
+                                    className={
+                                        selectedServiceIsImageIcon ? "w-full h-full object-cover block" : undefined
+                                    }
+                                />
                             </div>
                         </div>
 
@@ -192,7 +257,7 @@ export function Catalog() {
                                         : "border-border bg-card hover:border-primary/30"
                                 }`}
                             >
-                                <span className="font-semibold text-sm">На ваш аккаунт</span>
+                                <span className="font-semibold text-sm">На мой аккаунт</span>
                                 {accountType === "own" && (
                                     <div className="absolute top-2 right-2">
                                         <Check className="w-3 h-3" />
@@ -292,6 +357,42 @@ export function Catalog() {
                         </AnimatePresence>
                     </motion.div>
                 )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {comingSoonService ? (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+                        onClick={() => setComingSoonService(null)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.96 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.96 }}
+                            transition={{ type: "spring", stiffness: 260, damping: 22 }}
+                            className="w-full max-w-sm rounded-2xl bg-card border border-border p-6 text-center shadow-xl"
+                            onClick={(event) => event.stopPropagation()}
+                        >
+                            <div className="mx-auto w-14 h-14 rounded-2xl border border-border bg-accent/30 flex items-center justify-center">
+                                <Lock className="w-7 h-7 text-muted-foreground" />
+                            </div>
+
+                            <div className="mt-4 text-sm text-muted-foreground">
+                                Этот раздел скоро откроется!
+                            </div>
+
+                            <button
+                                className="mt-5 w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold"
+                                onClick={() => setComingSoonService(null)}
+                            >
+                                Ок
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                ) : null}
             </AnimatePresence>
         </div>
     );

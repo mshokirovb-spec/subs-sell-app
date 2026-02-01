@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { motion } from "framer-motion";
 import { BottomNav } from "./components/BottomNav";
 import { Catalog } from "./pages/Catalog";
 import { Cart } from "./pages/Cart";
@@ -8,9 +9,11 @@ import { Admin } from "./pages/Admin";
 import { getTelegramInitData, getTelegramUser } from "./lib/telegram";
 import { isAdminUser } from "./lib/admin";
 import { api } from "./lib/api";
+import { IntroSplash } from "./components/IntroSplash";
 
 function App() {
   const [activeTab, setActiveTab] = useState("catalog");
+  const [showIntro, setShowIntro] = useState(true);
   const telegramUser = useMemo(() => getTelegramUser(), []);
   const isAdmin = isAdminUser(telegramUser.id);
 
@@ -34,14 +37,27 @@ function App() {
   return (
     <CartProvider>
       <div className="min-h-screen bg-background text-foreground font-sans antialiased">
-        <main className="max-w-md mx-auto min-h-screen relative bg-background">
+        <motion.main
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
+          className="max-w-md mx-auto min-h-screen relative bg-background"
+        >
           {activeTab === "catalog" && <Catalog />}
           {activeTab === "cart" && <Cart />}
           {activeTab === "profile" && <Profile />}
           {activeTab === "admin" && isAdmin && <Admin />}
 
           <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
-        </main>
+        </motion.main>
+
+        {showIntro ? (
+          <IntroSplash
+            title="Wasub"
+            stepSeconds={0.5}
+            onFinish={() => setShowIntro(false)}
+          />
+        ) : null}
       </div>
     </CartProvider>
   );

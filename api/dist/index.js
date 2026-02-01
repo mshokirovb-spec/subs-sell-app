@@ -2,6 +2,7 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
@@ -13,7 +14,22 @@ const me_1 = __importDefault(require("./routes/me"));
 dotenv_1.default.config({ override: true });
 const app = (0, express_1.default)();
 const port = process.env.PORT || 3000;
-app.use((0, cors_1.default)());
+const corsOrigins = ((_a = process.env.CORS_ORIGIN) !== null && _a !== void 0 ? _a : '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
+const botToken = String((_c = (_b = process.env.TELEGRAM_BOT_TOKEN) !== null && _b !== void 0 ? _b : process.env.BOT_TOKEN) !== null && _c !== void 0 ? _c : '').trim();
+if (process.env.NODE_ENV === 'production') {
+    if (!botToken) {
+        console.warn('TELEGRAM_BOT_TOKEN is not set; protected endpoints will respond with 500.');
+    }
+    if (corsOrigins.length === 0) {
+        console.warn('CORS_ORIGIN is not set; API will allow requests from any origin.');
+    }
+}
+app.use((0, cors_1.default)({
+    origin: corsOrigins.length > 0 ? corsOrigins : true,
+}));
 app.use(express_1.default.json());
 app.use('/api/me', me_1.default);
 app.use('/api/orders', orders_1.default);
