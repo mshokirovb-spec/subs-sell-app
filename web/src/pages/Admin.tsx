@@ -4,8 +4,8 @@ import { getTelegramUser } from "../lib/telegram";
 import { isAdminUser } from "../lib/admin";
 import type { Order } from "../lib/types";
 import { RefreshCw } from "lucide-react";
-import { openChatWithUserId, openChatWithUsername } from "../lib/telegramLinks";
 import { Skeleton } from "../components/Skeleton";
+import { useToast } from "../context/ToastContext";
 
 const statusOptions: Array<{ value: Order["status"] | "ALL"; label: string }> = [
     { value: "PENDING", label: "Новые" },
@@ -118,11 +118,10 @@ export function Admin() {
                     <button
                         key={option.value}
                         onClick={() => setStatusFilter(option.value)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                            statusFilter === option.value
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "bg-card border-border text-muted-foreground hover:text-foreground"
-                        }`}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${statusFilter === option.value
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-card border-border text-muted-foreground hover:text-foreground"
+                            }`}
                     >
                         {option.label}
                     </button>
@@ -203,6 +202,7 @@ function OrderCard({
     const [assignedTo, setAssignedTo] = useState(order.assignedTo ?? "");
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const { showToast } = useToast();
 
     useEffect(() => {
         setStatus(order.status);
@@ -229,19 +229,12 @@ function OrderCard({
         try {
             const claimed = await api.claimOrder(order.id, adminId);
             onUpdated(claimed);
-
-            // Open chat with the customer after successfully claiming the order.
-            const username = claimed.user?.username;
-            if (username) {
-                openChatWithUsername(username);
-            } else {
-                openChatWithUserId(claimed.user.telegramId);
-            }
-
+            showToast("Заказ взят в работу", "success");
             setError(null);
         } catch (err) {
             const message = err instanceof Error ? err.message : "Не удалось взять заказ";
             setError(message);
+            showToast(message, "error");
         } finally {
             setIsClaiming(false);
         }
@@ -259,9 +252,11 @@ function OrderCard({
                 assignedTo: assignedTo.trim() ? assignedTo.trim() : null,
             });
             onUpdated(updated);
+            showToast("Изменения сохранены", "success");
             setError(null);
         } catch {
             setError("Не удалось обновить заказ");
+            showToast("Ошибка при сохранении", "error");
         } finally {
             setIsSaving(false);
         }
@@ -278,9 +273,8 @@ function OrderCard({
                     </div>
                 </div>
                 <div
-                    className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${
-                        statusStyles[status]
-                    }`}
+                    className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${statusStyles[status]
+                        }`}
                 >
                     {statusLabels[status]}
                 </div>
@@ -356,11 +350,10 @@ function OrderCard({
                             <button
                                 key={value}
                                 onClick={() => setStatus(value)}
-                                className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-colors ${
-                                    status === value
-                                        ? "bg-primary text-primary-foreground border-primary"
-                                        : "bg-card border-border text-muted-foreground hover:text-foreground"
-                                }`}
+                                className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-colors ${status === value
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "bg-card border-border text-muted-foreground hover:text-foreground"
+                                    }`}
                             >
                                 {statusLabels[value]}
                             </button>

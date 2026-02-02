@@ -2,6 +2,7 @@ import { Router, type Request } from 'express';
 import { getRequestTelegramUser, isTelegramAuthConfigured, requireTelegramAuth } from '../lib/telegramAuth';
 import { prisma } from '../lib/prisma';
 import { OrderStatus } from '@prisma/client';
+import { notifyAdmins, sendTelegramMessage, formatOrderItems } from '../lib/telegramBot';
 
 const router = Router();
 
@@ -124,8 +125,26 @@ router.post('/', requireTelegramAuth, async (req, res) => {
             },
             include: {
                 items: true,
+                user: true,
             },
         });
+
+        // Notify Admins
+        const adminMsg = `🆕 <b>Новый заказ #${order.id.slice(0, 8)}</b>\n\n` +
+            `👤 Покупатель: ${order.user.username ? `@${order.user.username}` : order.user.firstName}\n` +
+            `📞 Контакт: ${order.customerContact || 'не указан'}\n` +
+            `📝 Заметка: ${order.customerNote || '-'}\n\n` +
+            `🛒 Товары:\n${formatOrderItems(order.items)}\n\n` +
+            `💰 Итого: <b>${order.totalAmount} ₽</b>`;
+
+        notifyAdmins(adminMsg).catch(console.error);
+
+        // Notify User
+        const userMsg = `✅ <b>Заказ #${order.id.slice(0, 8)} успешно создан!</b>\n\n` +
+            `Ваш заказ принят и скоро будет обработан администратором.\n\n` +
+            `Статус: <b>Ожидает</b>`;
+
+        sendTelegramMessage(order.user.telegramId, userMsg).catch(console.error);
 
         res.json({ success: true, order });
     } catch (error) {
@@ -229,6 +248,12 @@ router.post('/:id/claim', requireTelegramAuth, async (req, res) => {
             },
         });
 
+        if (order) {
+            const userMsg = `👨‍💻 <b>Заказ #${order.id.slice(0, 8)} взят в работу!</b>\n\n` +
+                `Администратор начал выполнение вашего заказа.`;
+            sendTelegramMessage(order.user.telegramId, userMsg).catch(console.error);
+        }
+
         res.json({ order });
     } catch (error) {
         console.error('Error claiming order:', error);
@@ -287,22 +312,22 @@ router.patch('/:id', requireTelegramAuth, async (req, res) => {
         typeof req.body?.adminNote === 'string'
             ? req.body.adminNote.trim()
             : req.body?.adminNote === null
-              ? null
-              : undefined;
+                ? null
+                : undefined;
 
     const adminMessage =
         typeof req.body?.adminMessage === "string"
             ? req.body.adminMessage.trim()
             : req.body?.adminMessage === null
-              ? null
-              : undefined;
+                ? null
+                : undefined;
 
     const assignedToRaw =
         typeof req.body?.assignedTo === 'string'
             ? req.body.assignedTo.trim()
             : req.body?.assignedTo === null
-              ? null
-              : undefined;
+                ? null
+                : undefined;
     const assignedTo = assignedToRaw === '' ? null : assignedToRaw;
 
     const data = {
@@ -325,6 +350,31 @@ router.patch('/:id', requireTelegramAuth, async (req, res) => {
                 items: true,
             },
         });
+
+        // Notify on status change
+        if (status && status !== OrderStatus.PENDING) {
+            let statusLabel = 'В работе';
+            let emoji = '⚙️';
+
+            if (status === OrderStatus.COMPLETED) {
+                statusLabel = 'Выполнен';
+                emoji = '🎉';
+            } else if (status === OrderStatus.CANCELLED) {
+                statusLabel = 'Отменен';
+                emoji = '❌';
+            }
+
+            let userMsg = `${emoji} <b>Статус вашего заказа #${order.id.slice(0, 8)} обновлен:</b>\n\n` +
+                `Новый статус: <b>${statusLabel}</b>`;
+
+            if (status === OrderStatus.COMPLETED && order.adminMessage) {
+                userMsg += `\n\n💬 Сообщение от администратора:\n<pre>${order.adminMessage}</pre>`;
+            } else if (status === OrderStatus.CANCELLED && order.adminNote) {
+                // Optionally show cancellation reason if stored in adminNote (but usually note is private)
+            }
+
+            sendTelegramMessage(order.user.telegramId, userMsg).catch(console.error);
+        }
 
         res.json({ order });
     } catch (error) {
