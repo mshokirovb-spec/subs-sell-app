@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useSettings } from '../context/SettingsContext';
 
 export interface CheckoutDetails {
     customerContact: string;
@@ -21,6 +22,7 @@ export function CheckoutSheet({
     onClose: () => void;
     onConfirm: () => void;
 }) {
+    const { t } = useSettings();
     const normalizedContact = details.customerContact.trim();
     const normalizedNote = details.customerNote.trim();
 
@@ -51,14 +53,14 @@ export function CheckoutSheet({
                     >
                         <div className="max-w-md mx-auto space-y-4">
                             <div>
-                                <div className="text-lg font-bold">Оформление</div>
+                                <div className="text-lg font-bold">{t('cart_checkout_title')}</div>
                                 <div className="text-xs text-muted-foreground">
-                                    Оплата не подключена. Оставь данные, чтобы админ смог выполнить заказ.
+                                    {t('cart_payment_notice')}
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs text-muted-foreground">Контакт (необязательно)</label>
+                                <label className="text-xs text-muted-foreground">{t('cart_your_contact')}</label>
                                 <input
                                     value={details.customerContact}
                                     onChange={(event) =>
@@ -67,18 +69,15 @@ export function CheckoutSheet({
                                             customerContact: event.target.value,
                                         })
                                     }
-                                    placeholder="@username / телефон / email"
+                                    placeholder="@username / phone / email"
                                     className="w-full px-3 py-2 rounded-xl bg-background border border-border text-sm"
                                     maxLength={200}
                                     disabled={isLoading}
                                 />
-                                <div className="text-[11px] text-muted-foreground">
-                                    По умолчанию с тобой свяжутся в Telegram.
-                                </div>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs text-muted-foreground">Комментарий к заказу</label>
+                                <label className="text-xs text-muted-foreground">{t('cart_comment')}</label>
                                 <textarea
                                     value={details.customerNote}
                                     onChange={(event) =>
@@ -87,7 +86,7 @@ export function CheckoutSheet({
                                             customerNote: event.target.value,
                                         })
                                     }
-                                    placeholder="Например: регион, почта/логин, любые детали"
+                                    placeholder="..."
                                     className="w-full min-h-[110px] px-3 py-2 rounded-xl bg-background border border-border text-sm"
                                     maxLength={2000}
                                     disabled={isLoading}
@@ -100,14 +99,14 @@ export function CheckoutSheet({
                                     disabled={isLoading}
                                     className="py-3 rounded-xl bg-accent text-accent-foreground font-semibold disabled:opacity-70"
                                 >
-                                    Отмена
+                                    {t('cart_cancel')}
                                 </button>
                                 <button
                                     onClick={onConfirm}
                                     disabled={!isValid || isLoading}
                                     className="py-3 rounded-xl bg-primary text-primary-foreground font-semibold disabled:opacity-70"
                                 >
-                                    {isLoading ? 'Оформляем...' : 'Подтвердить'}
+                                    {isLoading ? t('cart_processing') : t('cart_confirm')}
                                 </button>
                             </div>
                         </div>

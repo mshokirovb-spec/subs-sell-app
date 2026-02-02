@@ -8,8 +8,10 @@ import { openSupportChat } from "../lib/support";
 import { CheckoutSheet, type CheckoutDetails } from "../components/CheckoutSheet";
 import { ServiceIcon } from "../components/ServiceIcon";
 import { resolveServiceIcon } from "../lib/serviceIcons";
+import { useSettings } from "../context/SettingsContext";
 
 export function Cart() {
+    const { t } = useSettings();
     const { cartItems, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
     const [isLoading, setIsLoading] = useState(false);
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -45,15 +47,15 @@ export function Cart() {
 
             if (hasReadyAccount) {
                 // Ready account - need to chat with admin
-                alert("Заказ успешно создан! Сейчас откроем чат с администратором.");
+                alert(t('cart_success_ready'));
                 openSupportChat();
             } else {
                 // Own account - admin will handle without chat
-                alert("Заказ успешно создан! Администратор выполнит заказ в ближайшее время.");
+                alert(t('cart_success_own'));
             }
         } catch (error) {
             console.error(error);
-            const message = error instanceof Error ? error.message : "Ошибка при создании заказа. Попробуйте позже.";
+            const message = error instanceof Error ? error.message : t('cart_error_create');
             alert(message);
         } finally {
             setIsLoading(false);
@@ -62,12 +64,12 @@ export function Cart() {
 
     return (
         <div className="p-4 pb-24 min-h-screen">
-            <h1 className="text-2xl font-bold mb-6">Корзина</h1>
+            <h1 className="text-2xl font-bold mb-6">{t('cart_title')}</h1>
 
             {cartItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-[60vh] text-muted-foreground">
                     <ShoppingBag className="w-16 h-16 mb-4 opacity-20" />
-                    <p>Корзина пуста</p>
+                    <p>{t('cart_empty')}</p>
                 </div>
             ) : (
                 <div className="space-y-4">
@@ -98,7 +100,7 @@ export function Cart() {
                                 <div className="flex-1 min-w-0">
                                     <h3 className="font-semibold truncate">{item.serviceName}</h3>
                                     <p className="text-xs text-muted-foreground">
-                                        {item.accountType === "ready" ? "Готовый аккаунт" : "На мой аккаунт"} • {item.durationLabel}
+                                        {item.accountType === "ready" ? t('catalog_ready_account') : t('catalog_own_account')} • {item.durationLabel}
                                     </p>
                                     <div className="flex items-center gap-3 mt-2">
                                         <div className="flex items-center bg-accent rounded-lg">
@@ -136,7 +138,7 @@ export function Cart() {
                     <div className="fixed bottom-[64px] left-0 right-0 p-4 bg-background/95 backdrop-blur-md border-t border-border z-20">
                         <div className="max-w-md mx-auto w-full">
                             <div className="flex items-center justify-between mb-3">
-                                <span className="text-muted-foreground">Итого:</span>
+                                <span className="text-muted-foreground">{t('cart_total')}</span>
                                 <span className="text-2xl font-bold">{totalPrice} ₽</span>
                             </div>
                             <button
@@ -154,14 +156,14 @@ export function Cart() {
                                 {isLoading ? (
                                     <>
                                         <Loader2 className="w-5 h-5 animate-spin" />
-                                        Обработка...
+                                        {t('cart_processing')}
                                     </>
                                 ) : (
-                                    "Оформить заказ"
+                                    t('cart_checkout')
                                 )}
                             </button>
                             <p className="text-xs text-muted-foreground text-center mt-2">
-                                Оплата пока не подключена — заказ уйдет менеджеру.
+                                {t('cart_payment_notice')}
                             </p>
                         </div>
                     </div>

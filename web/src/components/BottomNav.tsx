@@ -3,6 +3,7 @@ import { cn } from "../lib/utils";
 import { useCart } from "../context/CartContext";
 import { getTelegramUser } from "../lib/telegram";
 import { isAdminUser } from "../lib/admin";
+import { useSettings } from "../context/SettingsContext";
 
 interface BottomNavProps {
     activeTab: string;
@@ -10,14 +11,15 @@ interface BottomNavProps {
 }
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
+    const { t } = useSettings();
     const { totalItems } = useCart();
     const isAdmin = isAdminUser(getTelegramUser().id);
 
     const tabs = [
-        { id: "catalog", label: "Каталог", icon: Home },
-        { id: "cart", label: "Корзина", icon: ShoppingCart, badge: totalItems },
-        { id: "profile", label: "Профиль", icon: User },
-        ...(isAdmin ? [{ id: "admin", label: "Админ", icon: Shield }] : []),
+        { id: "catalog", label: t('nav_catalog'), icon: Home },
+        { id: "cart", label: t('nav_cart'), icon: ShoppingCart, badge: totalItems },
+        { id: "profile", label: t('nav_profile'), icon: User },
+        ...(isAdmin ? [{ id: "admin", label: t('nav_admin'), icon: Shield }] : []),
     ];
 
     return (

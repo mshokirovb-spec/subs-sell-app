@@ -6,6 +6,7 @@ import { Cart } from "./pages/Cart";
 import { Profile } from "./pages/Profile";
 import { CartProvider } from "./context/CartContext";
 import { Admin } from "./pages/Admin";
+import { SettingsProvider } from "./context/SettingsContext";
 import { getTelegramInitData, getTelegramUser } from "./lib/telegram";
 import { isAdminUser } from "./lib/admin";
 import { api } from "./lib/api";
@@ -17,11 +18,6 @@ function App() {
   const telegramUser = useMemo(() => getTelegramUser(), []);
   const isAdmin = isAdminUser(telegramUser.id);
 
-  // Set dark mode by default as requested
-  useEffect(() => {
-    document.documentElement.classList.add("dark");
-  }, []);
-
   useEffect(() => {
     const initData = getTelegramInitData();
     if (!initData) return;
@@ -31,35 +27,37 @@ function App() {
       telegramId: telegramUser.id,
       username: telegramUser.username,
       firstName: telegramUser.firstName,
-    }).catch(() => {});
+    }).catch(() => { });
   }, [telegramUser.id, telegramUser.username, telegramUser.firstName]);
 
   return (
-    <CartProvider>
-      <div className="min-h-screen bg-background text-foreground font-sans antialiased">
-        <motion.main
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
-          className="max-w-md mx-auto min-h-screen relative bg-background"
-        >
-          {activeTab === "catalog" && <Catalog />}
-          {activeTab === "cart" && <Cart />}
-          {activeTab === "profile" && <Profile />}
-          {activeTab === "admin" && isAdmin && <Admin />}
+    <SettingsProvider>
+      <CartProvider>
+        <div className="min-h-screen bg-background text-foreground font-sans antialiased">
+          <motion.main
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
+            className="max-w-md mx-auto min-h-screen relative bg-background"
+          >
+            {activeTab === "catalog" && <Catalog />}
+            {activeTab === "cart" && <Cart />}
+            {activeTab === "profile" && <Profile />}
+            {activeTab === "admin" && isAdmin && <Admin />}
 
-          <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
-        </motion.main>
+            <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+          </motion.main>
 
-        {showIntro ? (
-          <IntroSplash
-            title="Wasub"
-            stepSeconds={0.5}
-            onFinish={() => setShowIntro(false)}
-          />
-        ) : null}
-      </div>
-    </CartProvider>
+          {showIntro ? (
+            <IntroSplash
+              title="Wasub"
+              stepSeconds={0.5}
+              onFinish={() => setShowIntro(false)}
+            />
+          ) : null}
+        </div>
+      </CartProvider>
+    </SettingsProvider>
   );
 }
 

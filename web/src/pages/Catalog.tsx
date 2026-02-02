@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {ChevronLeft, Check, ShoppingCart, Plus, Minus, Lock } from "lucide-react";
+import { ChevronLeft, Check, ShoppingCart, Plus, Minus, Lock } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { ServiceIcon } from "../components/ServiceIcon";
 import { Skeleton } from "../components/Skeleton";
 import { api } from "../lib/api";
 import type { AccountType, Plan, Service } from "../lib/types";
 import { looksLikeImageUrl, resolveServiceIcon } from "../lib/serviceIcons";
+import { useSettings } from "../context/SettingsContext";
 
 const fallbackIcon = "📦";
 
@@ -19,6 +20,7 @@ const COMING_SOON_SERVICE_NAMES = new Set([
 ]);
 
 export function Catalog() {
+    const { t } = useSettings();
     const { addToCart } = useCart();
     const [services, setServices] = useState<Service[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -47,7 +49,7 @@ export function Catalog() {
                 }
             } catch {
                 if (isMounted) {
-                    setError("Не удалось загрузить каталог");
+                    setError(t('catalog_error_loading'));
                 }
             } finally {
                 if (isMounted) {
@@ -61,7 +63,7 @@ export function Catalog() {
         return () => {
             isMounted = false;
         };
-    }, []);
+    }, [t]);
 
     const availablePlans = useMemo(() => {
         if (!selectedService || !accountType) return [];
@@ -133,7 +135,7 @@ export function Catalog() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
                     >
-                        <h1 className="text-2xl font-bold mb-6">Каталог</h1>
+                        <h1 className="text-2xl font-bold mb-6">{t('catalog_title')}</h1>
                         {isLoading ? (
                             <div className="grid grid-cols-2 gap-3">
                                 {Array.from({ length: 6 }).map((_, index) => (
@@ -149,7 +151,7 @@ export function Catalog() {
                         ) : error ? (
                             <div className="text-sm text-destructive">{error}</div>
                         ) : services.length === 0 ? (
-                            <div className="text-sm text-muted-foreground">Каталог пуст</div>
+                            <div className="text-sm text-muted-foreground">{t('catalog_empty')}</div>
                         ) : (
                             <div className="grid grid-cols-2 gap-3">
                                 {services.map((service) => {
@@ -157,35 +159,34 @@ export function Catalog() {
                                     const isImageIcon = looksLikeImageUrl(icon);
 
                                     return (
-                                    <motion.div
-                                        key={service.id}
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={() => handleServiceClick(service)}
-                                        className="aspect-square rounded-xl bg-card border border-border flex flex-col items-center justify-center p-4 shadow-sm active:shadow-inner transition-all cursor-pointer"
-                                    >
-                                        <div
-                                            className={`w-12 h-12 flex items-center justify-center overflow-hidden mb-3 ${
-                                                isImageIcon
-                                                    ? "rounded-xl bg-card border border-border/50"
-                                                    : "rounded-full text-2xl text-white shadow-md"
-                                            }`}
-                                            style={
-                                                isImageIcon
-                                                    ? undefined
-                                                    : { backgroundColor: service.color ?? "#334155" }
-                                            }
+                                        <motion.div
+                                            key={service.id}
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={() => handleServiceClick(service)}
+                                            className="aspect-square rounded-xl bg-card border border-border flex flex-col items-center justify-center p-4 shadow-sm active:shadow-inner transition-all cursor-pointer"
                                         >
-                                            <ServiceIcon
-                                                icon={icon}
-                                                alt={service.name}
-                                                fallback={service.icon ?? fallbackIcon}
-                                                className={isImageIcon ? "w-full h-full object-cover block" : undefined}
-                                            />
-                                        </div>
-                                        <span className="font-semibold text-sm text-center leading-tight">
-                                            {service.name}
-                                        </span>
-                                    </motion.div>
+                                            <div
+                                                className={`w-12 h-12 flex items-center justify-center overflow-hidden mb-3 ${isImageIcon
+                                                        ? "rounded-xl bg-card border border-border/50"
+                                                        : "rounded-full text-2xl text-white shadow-md"
+                                                    }`}
+                                                style={
+                                                    isImageIcon
+                                                        ? undefined
+                                                        : { backgroundColor: service.color ?? "#334155" }
+                                                }
+                                            >
+                                                <ServiceIcon
+                                                    icon={icon}
+                                                    alt={service.name}
+                                                    fallback={service.icon ?? fallbackIcon}
+                                                    className={isImageIcon ? "w-full h-full object-cover block" : undefined}
+                                                />
+                                            </div>
+                                            <span className="font-semibold text-sm text-center leading-tight">
+                                                {service.name}
+                                            </span>
+                                        </motion.div>
                                     );
                                 })}
                             </div>
@@ -211,11 +212,10 @@ export function Catalog() {
 
                         <div className="flex justify-center mb-6">
                             <div
-                                className={`w-16 h-16 flex items-center justify-center overflow-hidden shadow-lg ${
-                                    selectedServiceIsImageIcon
+                                className={`w-16 h-16 flex items-center justify-center overflow-hidden shadow-lg ${selectedServiceIsImageIcon
                                         ? "rounded-2xl bg-card border border-border/50"
                                         : "rounded-full text-3xl text-white"
-                                }`}
+                                    }`}
                                 style={
                                     selectedServiceIsImageIcon
                                         ? undefined
@@ -236,13 +236,12 @@ export function Catalog() {
                         <div className="grid grid-cols-2 gap-3 mb-6">
                             <button
                                 onClick={() => handleAccountTypeChange("ready")}
-                                className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 relative ${
-                                    accountType === "ready"
+                                className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 relative ${accountType === "ready"
                                         ? "border-primary bg-primary/5 text-primary"
                                         : "border-border bg-card hover:border-primary/30"
-                                }`}
+                                    }`}
                             >
-                                <span className="font-semibold text-sm">Готовый аккаунт</span>
+                                <span className="font-semibold text-sm">{t('catalog_ready_account')}</span>
                                 {accountType === "ready" && (
                                     <div className="absolute top-2 right-2">
                                         <Check className="w-3 h-3" />
@@ -251,13 +250,12 @@ export function Catalog() {
                             </button>
                             <button
                                 onClick={() => handleAccountTypeChange("own")}
-                                className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 relative ${
-                                    accountType === "own"
+                                className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 relative ${accountType === "own"
                                         ? "border-primary bg-primary/5 text-primary"
                                         : "border-border bg-card hover:border-primary/30"
-                                }`}
+                                    }`}
                             >
-                                <span className="font-semibold text-sm">На мой аккаунт</span>
+                                <span className="font-semibold text-sm">{t('catalog_own_account')}</span>
                                 {accountType === "own" && (
                                     <div className="absolute top-2 right-2">
                                         <Check className="w-3 h-3" />
@@ -272,10 +270,10 @@ export function Catalog() {
                                 animate={{ opacity: 1, y: 0 }}
                                 className="space-y-3"
                             >
-                                <h3 className="font-semibold text-sm text-muted-foreground">Выберите срок</h3>
+                                <h3 className="font-semibold text-sm text-muted-foreground">{t('catalog_select_term')}</h3>
                                 {availablePlans.length === 0 ? (
                                     <div className="text-xs text-muted-foreground">
-                                        Нет вариантов для выбранного типа
+                                        {t('catalog_no_options')}
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-2 gap-2">
@@ -283,11 +281,10 @@ export function Catalog() {
                                             <button
                                                 key={plan.id}
                                                 onClick={() => setSelectedPlan(plan)}
-                                                className={`p-3 rounded-lg border transition-all text-sm font-medium ${
-                                                    selectedPlan?.id === plan.id
+                                                className={`p-3 rounded-lg border transition-all text-sm font-medium ${selectedPlan?.id === plan.id
                                                         ? "border-primary bg-primary text-primary-foreground shadow-md"
                                                         : "border-border bg-card hover:bg-accent"
-                                                }`}
+                                                    }`}
                                             >
                                                 {plan.durationLabel}
                                             </button>
@@ -303,7 +300,7 @@ export function Catalog() {
                                 animate={{ opacity: 1, y: 0 }}
                                 className="mt-6 flex items-center justify-between p-3 bg-card border border-border rounded-xl"
                             >
-                                <span className="font-semibold text-sm">Количество</span>
+                                <span className="font-semibold text-sm">{t('catalog_quantity')}</span>
                                 <div className="flex items-center gap-4">
                                     <button
                                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -332,7 +329,7 @@ export function Catalog() {
                                 >
                                     <div className="max-w-md mx-auto w-full">
                                         <div className="flex items-center justify-between mb-3">
-                                            <span className="text-muted-foreground text-sm">Итого:</span>
+                                            <span className="text-muted-foreground text-sm">{t('catalog_total')}</span>
                                             <span className="text-xl font-bold">
                                                 {calculatePrice() * quantity} ₽
                                             </span>
@@ -348,7 +345,7 @@ export function Catalog() {
                                                 onClick={handleBuyNow}
                                                 className="col-span-3 py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-lg shadow-lg active:scale-[0.98] transition-all"
                                             >
-                                                Купить сейчас
+                                                {t('catalog_buy_now')}
                                             </button>
                                         </div>
                                     </div>
@@ -381,14 +378,14 @@ export function Catalog() {
                             </div>
 
                             <div className="mt-4 text-sm text-muted-foreground">
-                                Этот раздел скоро откроется!
+                                {t('catalog_coming_soon_text')}
                             </div>
 
                             <button
                                 className="mt-5 w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold"
                                 onClick={() => setComingSoonService(null)}
                             >
-                                Ок
+                                {t('catalog_ok')}
                             </button>
                         </motion.div>
                     </motion.div>
