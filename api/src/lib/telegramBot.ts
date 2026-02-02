@@ -1,15 +1,21 @@
 import https from 'https';
 
-const botToken = String(process.env.TELEGRAM_BOT_TOKEN ?? process.env.BOT_TOKEN ?? '').trim();
-const adminIds = (process.env.ADMIN_TELEGRAM_IDS ?? '')
-    .split(',')
-    .map((value) => value.trim())
-    .filter(Boolean);
+function getBotToken(): string {
+    return String(process.env.TELEGRAM_BOT_TOKEN ?? process.env.BOT_TOKEN ?? '').trim();
+}
+
+function getAdminIds(): string[] {
+    return (process.env.ADMIN_TELEGRAM_IDS ?? '')
+        .split(',')
+        .map((value) => value.trim())
+        .filter(Boolean);
+}
 
 /**
  * Sends a message to a Telegram user/chat using the bot token.
  */
 export async function sendTelegramMessage(chatId: string | number, text: string): Promise<boolean> {
+    const botToken = getBotToken();
     if (!botToken || !chatId) {
         console.warn('Telegram Bot: Token or Chat ID is missing', { hasToken: !!botToken, chatId });
         return false;
@@ -28,7 +34,7 @@ export async function sendTelegramMessage(chatId: string | number, text: string)
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Content-Length': data.length,
+            'Content-Length': Buffer.byteLength(data),
         },
     };
 
@@ -60,6 +66,7 @@ export async function sendTelegramMessage(chatId: string | number, text: string)
  * Sends a notification to all configured admins.
  */
 export async function notifyAdmins(text: string): Promise<void> {
+    const adminIds = getAdminIds();
     if (adminIds.length === 0) {
         console.warn('Telegram Bot: No admin IDs configured to notify.');
         return;

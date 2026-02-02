@@ -6,7 +6,7 @@ import { notifyAdmins, sendTelegramMessage, formatOrderItems } from '../lib/tele
 
 const router = Router();
 
-const adminIds = new Set(
+const getAdminIdsSet = () => new Set(
     (process.env.ADMIN_TELEGRAM_IDS ?? '')
         .split(',')
         .map((value) => value.trim())
@@ -18,6 +18,7 @@ const getAdminTelegramId = (req: Request) =>
 
 const isAdminRequest = (req: Request) => {
     const authConfigured = isTelegramAuthConfigured();
+    const adminIds = getAdminIdsSet();
 
     // In production (when Telegram auth is configured) we require explicit admin IDs.
     if (authConfigured && adminIds.size === 0) return false;
@@ -155,7 +156,7 @@ router.post('/', requireTelegramAuth, async (req, res) => {
 
 router.get('/', requireTelegramAuth, async (req, res) => {
     if (!isAdminRequest(req)) {
-        if (isTelegramAuthConfigured() && adminIds.size === 0) {
+        if (isTelegramAuthConfigured() && getAdminIdsSet().size === 0) {
             return res
                 .status(403)
                 .json({ success: false, error: 'Admin access is not configured' });
@@ -208,7 +209,7 @@ router.get('/', requireTelegramAuth, async (req, res) => {
 
 router.post('/:id/claim', requireTelegramAuth, async (req, res) => {
     if (!isAdminRequest(req)) {
-        if (isTelegramAuthConfigured() && adminIds.size === 0) {
+        if (isTelegramAuthConfigured() && getAdminIdsSet().size === 0) {
             return res
                 .status(403)
                 .json({ success: false, error: 'Admin access is not configured' });
@@ -263,7 +264,7 @@ router.post('/:id/claim', requireTelegramAuth, async (req, res) => {
 
 router.get('/:id', requireTelegramAuth, async (req, res) => {
     if (!isAdminRequest(req)) {
-        if (isTelegramAuthConfigured() && adminIds.size === 0) {
+        if (isTelegramAuthConfigured() && getAdminIdsSet().size === 0) {
             return res
                 .status(403)
                 .json({ success: false, error: 'Admin access is not configured' });
@@ -293,7 +294,7 @@ router.get('/:id', requireTelegramAuth, async (req, res) => {
 
 router.patch('/:id', requireTelegramAuth, async (req, res) => {
     if (!isAdminRequest(req)) {
-        if (isTelegramAuthConfigured() && adminIds.size === 0) {
+        if (isTelegramAuthConfigured() && getAdminIdsSet().size === 0) {
             return res
                 .status(403)
                 .json({ success: false, error: 'Admin access is not configured' });
