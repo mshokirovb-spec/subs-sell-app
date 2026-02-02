@@ -74,7 +74,7 @@ export function Profile() {
 
     const menuItems = [
         { icon: History, label: "История заказов", href: "#orders" },
-        { icon: Headphones, label: "Поддержка", href: "https://t.me/admin_username" },
+        { icon: Headphones, label: "Поддержка", href: "https://t.me/ShMukhammad" },
         { icon: Settings, label: "Настройки", href: "#" },
     ];
 

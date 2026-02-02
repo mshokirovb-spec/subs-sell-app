@@ -21,6 +21,9 @@ export function Cart() {
     const handleSubmitOrder = async (details: CheckoutDetails) => {
         if (cartItems.length === 0) return;
 
+        // Check if any item is "ready" account (needs admin chat)
+        const hasReadyAccount = cartItems.some(item => item.accountType === "ready");
+
         setIsLoading(true);
         try {
             const user = getTelegramUser();
@@ -37,10 +40,17 @@ export function Cart() {
                 }))
             });
 
-            alert("Заказ успешно создан! Сейчас откроем чат с администратором.");
             setIsCheckoutOpen(false);
-            openSupportChat();
             clearCart();
+
+            if (hasReadyAccount) {
+                // Ready account - need to chat with admin
+                alert("Заказ успешно создан! Сейчас откроем чат с администратором.");
+                openSupportChat();
+            } else {
+                // Own account - admin will handle without chat
+                alert("Заказ успешно создан! Администратор выполнит заказ в ближайшее время.");
+            }
         } catch (error) {
             console.error(error);
             const message = error instanceof Error ? error.message : "Ошибка при создании заказа. Попробуйте позже.";
