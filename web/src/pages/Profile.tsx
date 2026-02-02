@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { User, Package, Clock, Settings as SettingsIcon, Headphones, History, ChevronRight } from "lucide-react";
+import { useProfile } from "../hooks/useProfile";
 import { getTelegramUser } from "../lib/telegram";
-import { api } from "../lib/api";
 import { Skeleton } from "../components/Skeleton";
-import type { ProfileOrder, ProfileStats } from "../lib/types";
-import { openSupportBotForOrder } from "../lib/supportBot";
 import { useSettings } from "../context/SettingsContext";
+import type { ProfileOrder } from "../lib/types";
+import { openSupportBotForOrder } from "../lib/supportBot";
 import { Settings } from "./Settings";
 
 const statusLabels: Record<ProfileOrder["status"], string> = {
@@ -27,47 +27,13 @@ export function Profile() {
     const telegramUser = getTelegramUser();
     const [showSettings, setShowSettings] = useState(false);
 
-    const [stats, setStats] = useState<ProfileStats>({
-        ordersCount: 0,
-        totalSpent: 0,
-        daysWithUs: 0,
-    });
-    const [orders, setOrders] = useState<ProfileOrder[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const { data, isLoading, error: queryError } = useProfile(telegramUser.id);
 
-    useEffect(() => {
-        let isMounted = true;
+    const stats = data?.stats ?? { ordersCount: 0, totalSpent: 0, daysWithUs: 0 };
+    const orders = data?.orders ?? [];
 
-        const loadProfile = async () => {
-            try {
-                setIsLoading(true);
-                const data = await api.getProfile(telegramUser.id);
-
-                if (!isMounted) return;
-
-                setStats(data.stats);
-                setOrders(data.orders);
-                setError(null);
-            } catch {
-                if (isMounted) {
-                    setError(t('profile_error_loading'));
-                }
-            } finally {
-                if (isMounted) {
-                    setIsLoading(false);
-                }
-            }
-        };
-
-        if (!showSettings) {
-            loadProfile();
-        }
-
-        return () => {
-            isMounted = false;
-        };
-    }, [telegramUser.id, showSettings, t]);
+    // If we have data, we assume no error unless query fails
+    const error = queryError ? t('profile_error_loading') : null;
 
     const user = useMemo(
         () => ({

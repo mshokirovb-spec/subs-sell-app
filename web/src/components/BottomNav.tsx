@@ -23,7 +23,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
     ];
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border pb-safe z-30">
+        <div className="fixed bottom-0 left-0 right-0 glass border-t border-white/5 pb-safe z-30">
             <div className="max-w-md mx-auto">
                 <div className="flex justify-around items-center h-16">
                     {tabs.map((tab) => {

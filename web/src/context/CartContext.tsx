@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from "react";
 import type { AccountType } from "../lib/types";
 
 export interface CartItem {
@@ -29,7 +29,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
-    const addToCart = (newItem: Omit<CartItem, "id">) => {
+    const addToCart = useCallback((newItem: Omit<CartItem, "id">) => {
         const id = newItem.planId;
 
         setCartItems((prev) => {
@@ -43,13 +43,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
             }
             return [...prev, { ...newItem, id }];
         });
-    };
+    }, []);
 
-    const removeFromCart = (id: string) => {
+    const removeFromCart = useCallback((id: string) => {
         setCartItems((prev) => prev.filter((item) => item.id !== id));
-    };
+    }, []);
 
-    const updateQuantity = (id: string, delta: number) => {
+    const updateQuantity = useCallback((id: string, delta: number) => {
         setCartItems((prev) =>
             prev.map((item) => {
                 if (item.id === id) {
@@ -59,14 +59,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 return item;
             })
         );
-    };
+    }, []);
 
-    const clearCart = () => {
+    const clearCart = useCallback(() => {
         setCartItems([]);
-    };
+    }, []);
 
-    const totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+    const totalPrice = useMemo(() => cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0), [cartItems]);
+    const totalItems = useMemo(() => cartItems.reduce((sum, item) => sum + item.quantity, 0), [cartItems]);
 
     return (
         <CartContext.Provider

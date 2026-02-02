@@ -1,12 +1,12 @@
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { looksLikeImageUrl } from "../lib/serviceIcons";
 
-type ServiceIconProps = {
-    icon: string;
+interface ServiceIconProps {
+    icon?: string;
     alt?: string;
     fallback?: string;
     className?: string;
-};
+}
 
 const buildImageCandidates = (value: string) => {
     const trimmed = value.trim();
@@ -33,7 +33,7 @@ const buildImageCandidates = (value: string) => {
     return uniq.map((item) => `${base}.${item}${suffix}`);
 };
 
-export function ServiceIcon({
+export const ServiceIcon = memo(function ServiceIcon({
     icon,
     alt = "",
     fallback = "📦",
@@ -89,4 +89,4 @@ export function ServiceIcon({
             }}
         />
     );
-}
+});
